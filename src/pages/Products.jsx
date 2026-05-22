@@ -31,7 +31,7 @@ export default function Products() {
     if (sort) params.sort = sort;
     if (page > 1) params.page = page;
     setSearchParams(params);
-  }, [debouncedSearch, category, sort, page, setSearchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, category, sort, page, setSearchParams]);
 
   const categories = useMemo(() =>
     [...new Set(products.map(p => p.category))].sort(), [products]);
