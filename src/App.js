@@ -1,25 +1,32 @@
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Sidebar from './components/Sidebar';
+import Topbar from './components/Topbar';
+import Products from './pages/Products';
+import ProductDetail from './pages/ProductDetail';
+import Analytics from './pages/Analytics';
+import Dashboard from './pages/Dashboard';
 
-function App() {
+function Layout({ title, children }) {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="app">
+      <Sidebar />
+      <div className="main">
+        <Topbar title={title} />
+        <div className="content">{children}</div>
+      </div>
     </div>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Layout title="Dashboard"><Dashboard /></Layout>} />
+        <Route path="/products" element={<Layout title="Products"><Products /></Layout>} />
+        <Route path="/products/:id" element={<Layout title="Product Detail"><ProductDetail /></Layout>} />
+        <Route path="/analytics" element={<Layout title="Analytics"><Analytics /></Layout>} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
