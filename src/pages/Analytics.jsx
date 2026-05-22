@@ -1,92 +1,75 @@
-import { useMemo } from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import React, { useMemo } from 'react';
 import useProducts from '../hooks/useProducts';
-
-const COLORS = ['#7c6ef7', '#f59e0b', '#22c55e', '#ef4444', '#3b82f6', '#ec4899'];
 
 export default function Analytics() {
   const { products, loading } = useProducts();
 
   const stats = useMemo(() => {
-    if (!products.length) return null;
-    const total = products.length;
-    const avgRating = (products.reduce((s, p) => s + p.rating, 0) / total).toFixed(2);
-    const totalInventory = products.reduce((s, p) => s + p.stock * p.price, 0).toFixed(0);
+    if (!products || products.length === 0) return null;
 
-    const categoryMap = {};
-    products.forEach(p => {
-      categoryMap[p.category] = (categoryMap[p.category] || 0) + 1;
-    });
-    const categoryData = Object.entries(categoryMap)
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value);
+    const totalProducts = products.length;
 
-    return { total, avgRating, totalInventory, categoryData };
+    // 1. Average Rating
+    const totalRating = products.reduce((acc, p) => acc + (p.rating || 0), 0);
+    const avgRating = (totalRating / totalProducts).toFixed(2);
+
+    // 2. Total Inventory Value (Price * Stock)
+    const totalInventoryValue = products.reduce((acc, p) => {
+      return acc + ((p.price || 0) * (p.stock || 0));
+    }, 0);
+
+    // 3. Category Distribution
+    const categoryCounts = products.reduce((acc, p) => {
+      acc[p.category] = (acc[p.category] || 0) + 1;
+      return acc;
+    }, {});
+
+    return {
+      totalProducts,
+      avgRating,
+      totalInventoryValue: totalInventoryValue.toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
+      categoryCounts
+    };
   }, [products]);
 
-  if (loading || !stats) return <div className="loading">Loading analytics...</div>;
+  if (loading) return <div className="loading">Loading analytics data...</div>;
+  if (!stats) return <div className="no-data">No data available to process.</div>;
 
   return (
-    <div>
-      {/* Stat Cards */}
-      <div className="stat-cards">
-        <div className="stat-card">
-          <span className="stat-icon">📦</span>
-          <div>
-            <p className="stat-label">Total Products</p>
-            <h2 className="stat-value">{stats.total}</h2>
-          </div>
+    <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
+      <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '24px' }}>Analytics Dashboard</h1>
+      
+      {/* KPI Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+        <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb' }}>
+          <h3 style={{ fontSize: '14px', color: '#6b7280', textTransform: 'uppercase' }}>Total Products</h3>
+          <p style={{ fontSize: '28px', fontWeight: 'bold', marginTop: '8px', color: '#111827' }}>{stats.totalProducts}</p>
         </div>
-        <div className="stat-card">
-          <span className="stat-icon">⭐</span>
-          <div>
-            <p className="stat-label">Average Rating</p>
-            <h2 className="stat-value">{stats.avgRating}</h2>
-          </div>
+        
+        <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb' }}>
+          <h3 style={{ fontSize: '14px', color: '#6b7280', textTransform: 'uppercase' }}>Average Rating</h3>
+          <p style={{ fontSize: '28px', fontWeight: 'bold', marginTop: '8px', color: '#f59e0b' }}>⭐ {stats.avgRating}</p>
         </div>
-        <div className="stat-card">
-          <span className="stat-icon">💰</span>
-          <div>
-            <p className="stat-label">Inventory Value</p>
-            <h2 className="stat-value">${Number(stats.totalInventory).toLocaleString()}</h2>
-          </div>
-        </div>
-        <div className="stat-card">
-          <span className="stat-icon">🗂️</span>
-          <div>
-            <p className="stat-label">Categories</p>
-            <h2 className="stat-value">{stats.categoryData.length}</h2>
-          </div>
+        
+        <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb' }}>
+          <h3 style={{ fontSize: '14px', color: '#6b7280', textTransform: 'uppercase' }}>Total Inventory Value</h3>
+          <p style={{ fontSize: '28px', fontWeight: 'bold', marginTop: '8px', color: '#10b981' }}>{stats.totalInventoryValue}</p>
         </div>
       </div>
 
-      {/* Charts */}
-      <div className="charts-grid">
-        <div className="chart-box">
-          <h3>Products by Category</h3>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={stats.categoryData}>
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} angle={-30} textAnchor="end" height={60} />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="value" fill="#7c6ef7" radius={[6,6,0,0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="chart-box">
-          <h3>Category Distribution</h3>
-          <ResponsiveContainer width="100%" height={280}>
-            <PieChart>
-              <Pie data={stats.categoryData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100}>
-                {stats.categoryData.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
+      {/* Category Breakdown list */}
+      <div style={{ background: '#fff', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb' }}>
+        <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px' }}>Category Distribution</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {Object.entries(stats.categoryCounts).map(([category, count]) => (
+            <div key={category} style={{ display: 'flex', alignItems: 'center', justifyBetween: 'space-between' }}>
+              <span style={{ textTransform: 'capitalize', width: '150px', fontSize: '14px' }}>{category}</span>
+              <div style={{ flexGrow: 1, backgroundColor: '#f3f4f6', height: '8px', borderRadius: '4px', margin: '0 16px', overflow: 'hidden' }}>
+                <div style={{ backgroundColor: '#4f46e5', height: '100%', width: `${(count / stats.totalProducts) * 100}%` }} />
+              </div>
+              <span style={{ fontSize: '14px', fontWeight: '600', width: '60px', textAlign: 'right' }}>{count} items</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
