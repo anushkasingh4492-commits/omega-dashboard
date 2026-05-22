@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import useProducts from '../hooks/useProducts';
 
-// Debounce hook for search
 function useDebounce(value, delay) {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
@@ -17,7 +16,6 @@ export default function Products() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Read state FROM url
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [category, setCategory] = useState(searchParams.get('category') || '');
   const [sort, setSort] = useState(searchParams.get('sort') || '');
@@ -26,15 +24,15 @@ export default function Products() {
 
   const debouncedSearch = useDebounce(search, 400);
 
-  // Sync state TO url
-useEffect(() => {
+  useEffect(() => {
     const params = {};
     if (debouncedSearch) params.search = debouncedSearch;
     if (category) params.category = category;
     if (sort) params.sort = sort;
     if (page > 1) params.page = page;
     setSearchParams(params);
-  }, [debouncedSearch, category, sort, page, setSearchParams]);
+  }, [debouncedSearch, category, sort, page, setSearchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const categories = useMemo(() =>
     [...new Set(products.map(p => p.category))].sort(), [products]);
 
@@ -65,7 +63,6 @@ useEffect(() => {
 
   return (
     <div>
-      {/* Filters Bar */}
       <div className="filters-bar">
         <input
           className="search-input"
@@ -86,7 +83,6 @@ useEffect(() => {
         <span className="results-count">{filtered.length} products</span>
       </div>
 
-      {/* Product Grid */}
       <div className="product-grid">
         {paginated.map(p => (
           <div key={p.id} className="product-card" onClick={() => navigate(`/products/${p.id}`)}>
@@ -106,7 +102,6 @@ useEffect(() => {
         ))}
       </div>
 
-      {/* Pagination */}
       <div className="pagination">
         <button disabled={page === 1} onClick={() => setPage(p => p - 1)}>← Prev</button>
         <span>Page {page} of {totalPages}</span>
