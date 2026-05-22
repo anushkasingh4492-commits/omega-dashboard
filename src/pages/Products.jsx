@@ -27,15 +27,14 @@ export default function Products() {
   const debouncedSearch = useDebounce(search, 400);
 
   // Sync state TO url
-  useEffect(() => {
+useEffect(() => {
     const params = {};
     if (debouncedSearch) params.search = debouncedSearch;
     if (category) params.category = category;
     if (sort) params.sort = sort;
     if (page > 1) params.page = page;
     setSearchParams(params);
-  }, [debouncedSearch, category, sort, page]);
-
+  }, [debouncedSearch, category, sort, page, setSearchParams]);
   const categories = useMemo(() =>
     [...new Set(products.map(p => p.category))].sort(), [products]);
 
